@@ -1,21 +1,14 @@
 """
 Class Treetagger
-Copyright 2017 University of Lausanne
+Copyright 2017 Xavier Barros
 -------------------------------------------------------------------------------
-This file is part of the Orange3-Textable-Prototypes package.
-
-Orange3-Textable-Prototypes is free software: you can redistribute it
-and/or modify it under the terms of the GNU General Public License as published
-by the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-Orange3-Textable-Prototypes is distributed in the hope that it will be
+This file is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Orange3-Textable-Prototypes If not, see
+along with this file. If not, see
 <http://www.gnu.org/licenses/>.
 """
 
@@ -26,6 +19,8 @@ __email__ = "xavier.barros@unil.ch"
 
 
 from Orange.widgets import widget, gui, settings
+
+from PyQt4.QtGui import QFileDialog
 
 from LTTL.Segmentation import Segmentation
 from LTTL.Input import Input
@@ -51,18 +46,14 @@ class Treetagger(OWTextableBaseWidget):
     # Widget"s metadata...
     
     name = "Treetagger"
-	description = "..."
-	icon = "icons/icon_treetagger.png"
-	priority = 1
+    description = "..."
+    icon = "icons/icon_treetagger.png"
+    priority = 1
     
     #----------------------------------------------------------------------
-	# Channel definitions...
+    # Channel definitions...
     
-    inputs = [
-            ("Text Input", Segmentation, self.processInputData),
-            Single
-        ]
-    
+    inputs = [("Text Input", Segmentation, "processInputData")]   
     outputs = [("Text data", Segmentation)]
     
     #----------------------------------------------------------------------
@@ -71,14 +62,15 @@ class Treetagger(OWTextableBaseWidget):
     settingsHandler = VersionedSettingsHandler(
         version=__version__.rsplit(".", 1)[0]
     )
-			    
+                
     autoSend = settings.Setting(False)
-    createdInputs = settings.Setting([])
+    unknown = settings.Setting(False)
+    activer_xml = settings.Setting(False)
     
     want_main_area = False
 
     def __init__(self):
-	    """Widget creator."""
+        """Widget creator."""
         super().__init__()
        
 
@@ -90,9 +82,9 @@ class Treetagger(OWTextableBaseWidget):
         self.created_inputs = list()
         self.language = 0
         self.check_firt_use = False
-        self.activer_xml = False
-        self.unknown = False
+        self.createdInputs = list()
         self.compteur = 0
+        self.NoLink = True
 
         # liste des langues possible
         self.langues_possibles = {
@@ -219,7 +211,7 @@ class Treetagger(OWTextableBaseWidget):
         self.sendButton.sendIf()
 
         # ajuster taille widjet
-        self.adjustSize()
+        self.adjustSizeWithTimer()
 
         # verifie lien treetagger
         self.treetagger_check()
@@ -441,15 +433,13 @@ class Treetagger(OWTextableBaseWidget):
                 display_all=True,
             )
             
-            
-            
             # avancer la progressBar d"un cran
             self.progressBar.advance()
             
             tagged_text = self.tag(concatenated_text)
             tagged_input = Input(tagged_text)
             tagged_segmentation = Segmenter.import_xml(tagged_input, "xb_tt")
-            
+
             # avancer la progressBar d"un cran
             self.progressBar.advance()
             
@@ -460,7 +450,7 @@ class Treetagger(OWTextableBaseWidget):
                         substitutions = [
                             (re.compile(r"<unknown>"), "[unknown]"),
                             (re.compile(
-                                r"(.+)\t(.+)\t(.+)"),
+                                r"(.+)\t(.+)\t(.+?)(?=[\r\n])"),
                                 "<w lemma='&3' type='&2'>&1</w>"
                             ),
                             (re.compile(r'"""'), '"&quot;"'),
@@ -474,11 +464,10 @@ class Treetagger(OWTextableBaseWidget):
                         substitutions=[
                             (re.compile(r"<unknown>"), "[unknown]"),
                             (re.compile(
-                                r"(.+)\t(.+)\t(.+)"),
+                                r"(.+)\t(.+)\t(.+?)(?=[\r\n])"),
                                 "<w lemma='&3' type='&2'>&1</w>"
                             ),
                             (re.compile(r'"""'), '"&quot;"'),
-
                         ],
                     )
                 final_segmentation = Segmenter.import_xml(
@@ -515,8 +504,8 @@ class Treetagger(OWTextableBaseWidget):
         tmp2 = os.path.normpath(os.path.expanduser("~/tmp_file2.txt"))
 
         # ecrire dans un premier fichier le texte
-        f = open(tmp, "w")
-        f.write(inputData.encode("UTF-8"))
+        f = open(tmp, "w", encoding="utf-8")
+        f.write(inputData)
         f.close()
 
         # liste de langue en option...
@@ -570,8 +559,8 @@ class Treetagger(OWTextableBaseWidget):
         self.progressBar.advance()
             
         # ecrire dans un deuxieme fichier le texte separe en mots
-        f = codecs.open(tmp2, "w")
-        f.write(out.encode("UTF-8"))
+        f = codecs.open(tmp2, "w", encoding="utf-8")
+        f.write(out)
         f.close()
 
         if self.system ==  "nt":
@@ -647,23 +636,15 @@ class Treetagger(OWTextableBaseWidget):
         """Free memory when widget is deleted (overriden method)"""
         self.clearCreatedInputs()
 
-    def getSettings(self, *args, **kwargs):
-        """Read settings, taking into account version number (overriden)"""
-        settings = OWWidget.getSettings(self, *args, **kwargs)
-        settings["settingsDataVersion"] = __version__.split(".")[:2]
-        return settings
+    def setCaption(self, title):
+        if 'captionTitle' in dir(self):
+            changed = title != self.captionTitle
+            super().setCaption(title)
+            if changed:
+                self.sendButton.settingsChanged()
+        else:
+            super().setCaption(title)
 
-    def setSettings(self, settings):
-        """Write settings, taking into account version number (overriden)"""
-        if settings.get("settingsDataVersion", None) \
-                == __version__.split(".")[:2]:
-            settings = settings.copy()
-            del settings["settingsDataVersion"]
-            OWWidget.setSettings(self, settings)
-
-    def adjustSizeWithTimer(self):
-        qApp.processEvents()
-        QTimer.singleShot(50, self.adjustSize)
 
 if __name__ == "__main__":
     import sys
