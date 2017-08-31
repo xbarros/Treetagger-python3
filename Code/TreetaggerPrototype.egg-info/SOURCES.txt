@@ -1,5 +1,5 @@
 setup.py
-TreetaggerPrototype/OWTreetagger.py
+TreetaggerPrototype/Treetagger.py
 TreetaggerPrototype/__init__.py
 TreetaggerPrototype.egg-info/PKG-INFO
 TreetaggerPrototype.egg-info/SOURCES.txt

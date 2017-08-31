@@ -445,7 +445,7 @@ class Treetagger(OWTextableBaseWidget):
             
             # Si checkBox xml active
             if self.activer_xml == True:
-                xml_segmentation = Segmenter.recode(
+                xml_segmentation, _ = Segmenter.recode(
                         tagged_segmentation,
                         substitutions = [
                             (re.compile(r"<unknown>"), "[unknown]"),
@@ -459,7 +459,7 @@ class Treetagger(OWTextableBaseWidget):
                 final_segmentation = xml_segmentation
             # Si checkBox xml desactive
             else:
-                xml_segmentation = Segmenter.recode(
+                xml_segmentation, _ = Segmenter.recode(
                         tagged_segmentation,
                         substitutions=[
                             (re.compile(r"<unknown>"), "[unknown]"),

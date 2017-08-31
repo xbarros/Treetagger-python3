@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: TreetaggerPrototype
-Version: 0.0.1
+Version: 0.1.1
 Summary: UNKNOWN
 Home-page: UNKNOWN
 Author: Xavier Barros
@@ -12,6 +12,6 @@ Platform: UNKNOWN
 Classifier: Development Status :: 3 - Alpha
 Classifier: Intended Audience :: Science/Research
 Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
-Classifier: Programming Language :: Python :: 2 :: only
-Classifier: Programming Language :: Python :: 2.6
-Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3 :: only
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.4
